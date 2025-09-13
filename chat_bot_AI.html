@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fun AI Chatbot</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #6a11cb, #2575fc);
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 0;
+    }
+
+    .chat-container {
+      background: #fff;
+      width: 400px;
+      height: 500px;
+      border-radius: 15px;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .chat-header {
+      background: #6a11cb;
+      color: white;
+      padding: 15px;
+      text-align: center;
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    .chat-box {
+      flex: 1;
+      padding: 15px;
+      overflow-y: auto;
+      font-size: 15px;
+    }
+
+    .chat-message {
+      margin: 8px 0;
+      padding: 10px;
+      border-radius: 10px;
+      max-width: 80%;
+      line-height: 1.4;
+    }
+
+    .user {
+      background: #2575fc;
+      color: white;
+      align-self: flex-end;
+      text-align: right;
+    }
+
+    .bot {
+      background: #f1f1f1;
+      color: #333;
+      align-self: flex-start;
+    }
+
+    .chat-input {
+      display: flex;
+      border-top: 1px solid #ddd;
+    }
+
+    .chat-input input {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      outline: none;
+      font-size: 14px;
+    }
+
+    .chat-input button {
+      background: #6a11cb;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: 0.3s;
+    }
+
+    .chat-input button:hover {
+      background: #2575fc;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="chat-container">
+    <div class="chat-header">🤖 Fun AI Chatbot</div>
+    <div class="chat-box" id="chat-box"></div>
+    <div class="chat-input">
+      <input type="text" id="user-input" placeholder="Type your message...">
+      <button onclick="sendMessage()">Send</button>
+    </div>
+  </div>
+
+  <script>
+    const chatBox = document.getElementById("chat-box");
+
+    function sendMessage() {
+      const userInput = document.getElementById("user-input").value.trim();
+      if (userInput === "") return;
+
+      appendMessage(userInput, "user");
+      document.getElementById("user-input").value = "";
+
+      setTimeout(() => {
+        botReply(userInput.toLowerCase());
+      }, 500);
+    }
+
+    function appendMessage(message, sender) {
+      const messageDiv = document.createElement("div");
+      messageDiv.classList.add("chat-message", sender);
+      messageDiv.textContent = message;
+      chatBox.appendChild(messageDiv);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    function botReply(userMessage) {
+      let reply;
+
+      if (["hi", "hello", "hey"].includes(userMessage)) {
+        reply = "Hello there! 👋 How’s your day going?";
+      } 
+      else if (userMessage.includes("good")) {
+        reply = "That's good to hear!";
+      } 
+      else if (userMessage.includes("bye")) {
+        reply = "Goodbye! Take care and stay awesome ✨";
+      }
+      else if (userMessage.includes("how are you")) {
+        reply = "I’m doing great, thanks for asking! How about you? 😊";
+      }
+      else if (userMessage.includes("tell me a joke")) {
+        reply = "😂 Why don’t programmers like nature? Too many *bugs*!";
+      }
+      else if (userMessage.includes("tip")) {
+        reply = "💡 Tip: Don’t just study hard, study smart! Break tasks into chunks.";
+      }
+      else if (userMessage.includes("motivate")) {
+        reply = "🚀 Remember: Success doesn’t come to you, you go to it!";
+      }
+      else if (userMessage.includes("cyber")) {
+        reply = "🔐 Cyber Tip: Never click on suspicious links in emails.";
+      }
+      else {
+        reply = "Hmm 🤔 I’m still learning… can you try saying something else?";
+      }
+
+      appendMessage(reply, "bot");
+    }
+  </script>
+
+</body>
+</html>

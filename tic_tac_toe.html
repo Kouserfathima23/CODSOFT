@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Tic Tac Toe — Cozy Pink (Unbeatable AI)</title>
+  <style>
+    :root{
+      --bg1: #ffeef7;
+      --bg2: #ffdff0;
+      --accent: #ff4d94;
+      --accent-dark: #d81b60;
+      --card: #fff0f6;
+      --win: #33cc99;
+      --text: #4a148c;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: "Poppins", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      background: linear-gradient(135deg,var(--bg1),var(--bg2));
+      color:var(--text);
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:20px;
+    }
+
+    .app {
+      width: 420px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.9), rgba(255,248,250,0.95));
+      border-radius: 18px;
+      box-shadow: 0 12px 30px rgba(74,20,124,0.12);
+      padding: 20px;
+      text-align:center;
+    }
+
+    h1{
+      margin:6px 0 12px 0;
+      font-size:1.6rem;
+      color:var(--accent);
+      letter-spacing:0.6px;
+      text-shadow: 1px 1px rgba(255,255,255,0.7);
+    }
+
+    .controls{
+      display:flex;
+      gap:8px;
+      justify-content:center;
+      align-items:center;
+      margin-bottom:12px;
+      flex-wrap:wrap;
+    }
+
+    select, button {
+      padding:8px 12px;
+      border-radius:12px;
+      border:none;
+      font-weight:600;
+      cursor:pointer;
+    }
+
+    select{
+      background:var(--card);
+      color:var(--text);
+      box-shadow: 0 4px 8px rgba(200,120,170,0.06);
+    }
+
+    button.primary{
+      background:var(--accent);
+      color:white;
+      box-shadow: 0 6px 14px rgba(216,27,96,0.18);
+    }
+
+    button.ghost{
+      background: transparent;
+      border: 1px solid rgba(74,20,124,0.06);
+      color:var(--text);
+    }
+
+    #status{
+      margin-top:8px;
+      font-weight:700;
+      color:var(--text);
+      background:#fff0f6;
+      padding:8px 12px;
+      border-radius:12px;
+      display:inline-block;
+    }
+
+    .board {
+      margin:18px auto 6px;
+      display:grid;
+      grid-template-columns: repeat(3, 110px);
+      grid-template-rows: repeat(3, 110px);
+      gap:12px;
+      justify-content:center;
+    }
+
+    .cell {
+      background:var(--card);
+      border-radius:16px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:48px;
+      font-weight:800;
+      color:var(--accent-dark);
+      cursor:pointer;
+      user-select:none;
+      transition: transform .12s ease, box-shadow .12s ease, background .12s;
+      box-shadow: 0 6px 18px rgba(170,70,130,0.06);
+    }
+
+    .cell:hover { transform: translateY(-4px); box-shadow: 0 12px 26px rgba(170,70,130,0.08); }
+    .cell.disabled { cursor:default; opacity:0.95; transform:none; box-shadow:none; }
+    .cell.x { color:#7b1fa2; }  /* X color */
+    .cell.o { color:#00695c; }  /* O color */
+
+    .result {
+      margin-top:12px;
+      font-weight:800;
+      color:var(--win);
+      min-height:22px;
+    }
+
+    .footer {
+      margin-top:14px;
+      font-size:12px;
+      color:rgba(74,20,124,0.6);
+    }
+
+    @media (max-width:480px){
+      .board { grid-template-columns: repeat(3, 86px); grid-template-rows: repeat(3, 86px); gap:10px; }
+      .cell { font-size:40px; border-radius:12px; }
+    }
+
+  </style>
+</head>
+<body>
+  <div class="app">
+    <h1>🎀 Cozy Tic-Tac-Toe — Unbeatable AI</h1>
+
+    <div class="controls">
+      <label style="font-weight:700; color:rgba(74,20,124,0.8)">You are</label>
+      <select id="starter">
+        <option value="human" selected>Human (X) — You start</option>
+        <option value="ai">AI (O) — AI starts</option>
+      </select>
+
+      <button class="primary" id="newBtn">Start / Restart</button>
+      <button class="ghost" id="hintBtn">Give me a hint 💡</button>
+    </div>
+
+    <div id="status">Ready — choose who starts and press Start</div>
+
+    <div class="board" id="board"></div>
+
+    <div class="result" id="result"></div>
+
+    <div class="footer">Minimax + Alpha-Beta pruning — AI will not lose 💖</div>
+  </div>
+
+  <script>
+    // --- Game State ---
+    const boardEl = document.getElementById('board');
+    const statusEl = document.getElementById('status');
+    const resultEl = document.getElementById('result');
+    const newBtn = document.getElementById('newBtn');
+    const hintBtn = document.getElementById('hintBtn');
+    const starterSelect = document.getElementById('starter');
+
+    let board = Array(9).fill(null); // null | 'X' | 'O'
+    let human = 'X';
+    let ai = 'O';
+    let current = human; // who moves next
+    let running = false;
+
+    // --- Utility ---
+    const wins = [
+      [0,1,2],[3,4,5],[6,7,8],
+      [0,3,6],[1,4,7],[2,5,8],
+      [0,4,8],[2,4,6]
+    ];
+
+    function isTerminal(b){
+      // return winner 'X'/'O' or 'draw' or null
+      for(const w of wins){
+        const [a,b1,c] = w;
+        if (b[a] && b[a] === b[b1] && b[a] === b[c]) return b[a];
+      }
+      if (!b.includes(null)) return 'draw';
+      return null;
+    }
+
+    // --- Minimax with Alpha-Beta pruning ---
+    function minimax(b, depth, isMaximizing, alpha, beta){
+      const terminal = isTerminal(b);
+      if (terminal === ai) return {score: 10 - depth};      // AI win
+      if (terminal === human) return {score: depth - 10};   // Human win
+      if (terminal === 'draw') return {score: 0};
+
+      if (isMaximizing){
+        let best = {score: -Infinity, move: -1};
+        for(let i=0;i<9;i++){
+          if (b[i] === null){
+            b[i] = ai;
+            const res = minimax(b, depth+1, false, alpha, beta);
+            b[i] = null;
+            if (res.score > best.score){ best = {score: res.score, move: i}; }
+            alpha = Math.max(alpha, res.score);
+            if (beta <= alpha) break; // prune
+          }
+        }
+        return best;
+      } else {
+        let best = {score: Infinity, move: -1};
+        for(let i=0;i<9;i++){
+          if (b[i] === null){
+            b[i] = human;
+            const res = minimax(b, depth+1, true, alpha, beta);
+            b[i] = null;
+            if (res.score < best.score){ best = {score: res.score, move: i}; }
+            beta = Math.min(beta, res.score);
+            if (beta <= alpha) break; // prune
+          }
+        }
+        return best;
+      }
+    }
+
+    // --- Rendering ---
+    function renderBoard(){
+      boardEl.innerHTML = '';
+      for(let i=0;i<9;i++){
+        const div = document.createElement('div');
+        div.classList.add('cell');
+        if (board[i] === 'X') div.classList.add('x');
+        if (board[i] === 'O') div.classList.add('o');
+        if (board[i]) div.classList.add('disabled');
+        div.dataset.index = i;
+        div.textContent = board[i] ? board[i] : '';
+        div.addEventListener('click', onCellClick);
+        boardEl.appendChild(div);
+      }
+    }
+
+    function onCellClick(e){
+      const idx = Number(e.currentTarget.dataset.index);
+      if (!running) { showMsg('Game not started — press Start'); return; }
+      if (board[idx] || isTerminal(board)) return;
+      if (current !== human) return; // not human's turn
+
+      board[idx] = human;
+      updateAfterMove();
+    }
+
+    function showMsg(msg){
+      statusEl.textContent = msg;
+    }
+
+    function updateAfterMove(){
+      renderBoard();
+      const term = isTerminal(board);
+      if (term){
+        endGame(term);
+        return;
+      }
+      // switch to AI
+      current = (current === human) ? ai : human;
+      if (current === ai){
+        showMsg("AI thinking... 🤖");
+        // compute AI move with a slight delay to feel natural
+        setTimeout(()=> {
+          const move = minimax(board, 0, true, -Infinity, Infinity).move;
+          board[move] = ai;
+          renderBoard();
+          const term2 = isTerminal(board);
+          if (term2) { endGame(term2); return; }
+          current = human;
+          showMsg("Your turn (X) — you can't beat this AI 😉");
+        }, 300);
+      } else {
+        showMsg("Your turn (X)");
+      }
+    }
+
+    function endGame(term){
+      running = false;
+      if (term === 'draw'){
+        resultEl.textContent = "It's a draw! Nice playing 🤝";
+        showMsg("Game finished");
+      } else {
+        resultEl.textContent = `${term} wins! ${term==='X' ? "You won? (impossible 😅)" : "AI wins!"}`;
+        showMsg("Game finished");
+      }
+      // make board non-clickable visually
+      renderBoard();
+    }
+
+    // --- Controls ---
+    function startNew(){
+      board = Array(9).fill(null);
+      resultEl.textContent = '';
+      // who starts:
+      const starter = starterSelect.value;
+      current = (starter === 'human') ? human : ai;
+      running = true;
+      renderBoard();
+      if (current === human){
+        showMsg("Your turn (X) — good luck!");
+      } else {
+        showMsg("AI starts — thinking...");
+        // if AI starts, let it play immediately
+        setTimeout(()=> {
+          const move = minimax(board, 0, true, -Infinity, Infinity).move;
+          board[move] = ai;
+          renderBoard();
+          current = human;
+          showMsg("Your turn (X)");
+        }, 350);
+      }
+    }
+
+    // hint: compute best move for human (advice)
+    function giveHint(){
+      if (!running) { showMsg("Start the game first to get a hint"); return; }
+      // compute best move for human using minimax minimizing score
+      const best = minimax(board, 0, false, -Infinity, Infinity);
+      if (best.move >= 0){
+        showMsg(`Try cell ${best.move + 1} (top-left is 1) — good move! 💡`);
+        // flash the hint cell briefly
+        const cell = document.querySelector(`.cell[data-index='${best.move}']`);
+        if (cell){
+          cell.style.boxShadow = "0 0 0 6px rgba(255,77,148,0.12)";
+          setTimeout(()=> { cell.style.boxShadow = ""; }, 700);
+        }
+      } else {
+        showMsg("No hint available");
+      }
+    }
+
+    // --- Events ---
+    newBtn.addEventListener('click', startNew);
+    hintBtn.addEventListener('click', giveHint);
+
+    // init
+    renderBoard();
+    showMsg("Ready — choose starter and press Start");
+  </script>
+</body>
+</html>

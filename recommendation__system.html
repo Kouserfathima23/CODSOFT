@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart Recommendation System</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(to right, #f8bbd0, #e1bee7); /* soft pink + lavender */
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .container {
+      background: white;
+      width: 500px;
+      padding: 30px;
+      border-radius: 18px;
+      box-shadow: 0px 8px 18px rgba(0, 0, 0, 0.2);
+      text-align: center;
+    }
+
+    h1 {
+      color: #6a1b9a;
+      margin-bottom: 10px;
+    }
+
+    .subtitle {
+      font-size: 14px;
+      color: #555;
+      margin-bottom: 20px;
+    }
+
+    select, input {
+      width: 90%;
+      padding: 12px;
+      margin: 10px 0;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      outline: none;
+      font-size: 15px;
+    }
+
+    button {
+      background: #ba68c8;
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 10px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    button:hover {
+      background: #8e24aa;
+    }
+
+    .results {
+      margin-top: 20px;
+      text-align: left;
+      padding: 15px;
+      background: #f3e5f5;
+      border-radius: 10px;
+      box-shadow: inset 0px 2px 6px rgba(0,0,0,0.1);
+    }
+
+    .results h3 {
+      margin: 0 0 10px;
+      color: #4a148c;
+    }
+
+    .recommendation-item {
+      background: white;
+      padding: 10px;
+      margin: 5px 0;
+      border-radius: 6px;
+      border-left: 4px solid #ba68c8;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1>✨ Smart Recommendation System ✨</h1>
+    <p class="subtitle">Movies | Books | Products</p>
+
+    <label for="category">Choose a Category:</label><br>
+    <select id="category">
+      <option value="movies">Movies</option>
+      <option value="books">Books</option>
+      <option value="products">Products</option>
+    </select><br>
+
+    <label for="interest">Enter your interests:</label><br>
+    <input type="text" id="interest" placeholder="e.g. adventure, sci-fi, fitness"><br>
+
+    <button onclick="getRecommendation()">Get Recommendation</button>
+
+    <div class="results" id="results" style="display:none;">
+      <h3>🔍 Recommended for you:</h3>
+      <div id="recommendationList"></div>
+    </div>
+  </div>
+
+  <script>
+    const data = {
+      movies: {
+        adventure: ["Clash of the Titans", "Salt", "Focus"],
+        romance: ["The Notebook", "La La Land", "Pride and Prejudice"],
+        comedy: ["The Hangover", "Superbad", "Step Brothers"]
+      },
+      books: {
+        adventure: ["The Hobbit", "Treasure Island", "Life of Pi"],
+        romance: ["A Court Of Thorns and Roses", "The Predator (2020)", "From Blood and Ash"],
+        sciFi: ["Dune", "Ender's Game", "Neuromancer"]
+      },
+      products: {
+        fitness: ["Yoga Mat", "Dumbbells Set", "Fitness Tracker"],
+        tech: ["Wireless Earbuds", "Smartwatch", "Portable Charger"],
+        fashion: ["Versace", "Denim Jacket", "Chelsea Boots"]
+      }
+    };
+
+    function getRecommendation() {
+      const category = document.getElementById("category").value;
+      const interest = document.getElementById("interest").value.toLowerCase();
+      const resultsDiv = document.getElementById("results");
+      const recommendationList = document.getElementById("recommendationList");
+
+      recommendationList.innerHTML = "";
+
+      if (data[category][interest]) {
+        data[category][interest].forEach(item => {
+          let div = document.createElement("div");
+          div.classList.add("recommendation-item");
+          div.textContent = item;
+          recommendationList.appendChild(div);
+        });
+      } else {
+        let div = document.createElement("div");
+        div.classList.add("recommendation-item");
+        div.textContent = "No recommendations found for your interest 😢";
+        recommendationList.appendChild(div);
+      }
+
+      resultsDiv.style.display = "block";
+    }
+  </script>
+
+</body>
+</html>
